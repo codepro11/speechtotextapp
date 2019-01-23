@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Record</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-    <script src="js/recordController.js" type="text/javascript"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>-->
+    <script src="/javascripts/angular-1.6.9.min.js" type="text/javascript"></script>
+    <script src="/javascripts/FileSaver.js" type="text/javascript"></script>
+    <!--<script src="/javascripts/jquery_3.2.1.min.js"></script>-->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+    <script src="/js/recordController.js" type="text/javascript"></script>
 </head>
 <body ng-controller="recordController">
 <button id="recordButton" ng-click="changeStatus()" ng-disabled="!disabled">Record</button>
