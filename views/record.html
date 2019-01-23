@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="speechtotext">
+<head>
+    <meta charset="UTF-8">
+    <title>Record</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <script src="js/recordController.js" type="text/javascript"></script>
+</head>
+<body ng-controller="recordController">
+<button id="recordButton" ng-click="changeStatus()" ng-disabled="!disabled">Record</button>
+<button id="stopButton" ng-click="changeStatus()" ng-disabled="disabled">Stop</button>
+<br/>
+<audio ng-if="record == true" controls></audio>
+<!--<audio ng-if="record == false && click != 0 " id="aud2" controls></audio>-->
+</body>
+</html>
