@@ -1,8 +1,46 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+.button {
+  padding: 15px 32px;
+  text-align: center;
+  font-size: 30px;
+  font-family: inherit;
+  border-radius: 60%;
 }
 
-a {
-  color: #00B7FF;
+.pointer1 {
+  cursor: pointer;
+}
+
+.pointer2 {
+  cursor: not-allowed;
+}
+
+.tableheight {
+  height: 100px;
+  position: static;
+}
+
+#tscripts {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+}
+
+#tscripts td, #tscripts th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#tscripts tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#tscripts tr:hover {
+  background-color: #ddd;
+}
+
+#tscripts th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #87cefa;
+  color: white;
 }

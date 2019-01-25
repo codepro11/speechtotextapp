@@ -5,7 +5,7 @@ var formidable = require('formidable');
 var fs = require('fs');
 var exec = require('child_process').exec;
 var mongoClient = require('mongodb').MongoClient;
-var remoteMongoUrl = "mongodb://localhost:27017/truepush";
+var remoteMongoUrl = "mongodb://localhost:27017/testDB";
 var textCollection;
 
 function saveToDb(text, callback) {
@@ -13,7 +13,6 @@ function saveToDb(text, callback) {
         textCollection.insert({'_id': text}, function (err, insRes) {
             if (err) {
                 if (err.code === 11000) {
-                    console.log('Duplicate text');
                     callback(2);
                 }
                 else {
@@ -22,11 +21,10 @@ function saveToDb(text, callback) {
                 }
             }
             else {
-                console.log('insRes:', insRes);
-                if(insRes.insertedCount == 1){
+                if (insRes.insertedCount == 1) {
                     callback(1);
                 }
-                else{
+                else {
                     callback(0);
                 }
             }
@@ -44,7 +42,7 @@ function getMongo() {
         }
         else {
             if (db !== null) {
-                db.authenticate("user", "user", function (err, res) {
+                db.authenticate("test", "test", function (err, res) {
                     if (err) {
                         console.log(err);
                     }
@@ -80,7 +78,6 @@ router.post('/saveAudio', function (req, res, next) {
 
         // rename it to it's orignal name
         form.on('field', function (field, value) {
-            // console.log("field",field, "value",value)
             fid = value;
         });
         form.on('file', function (field, file) {
@@ -104,23 +101,17 @@ router.post('/saveAudio', function (req, res, next) {
         console.error(errr.stack);
     }
 });
+
 router.get('/convertAudio', function (req, res, next) {
     var filepath = path.join(__dirname, '../public/audio/');
     var command = 'curl -X POST -u "apikey:TJfuoXFauZTSMOefqWkK40X339GcIdn4YoWlSB4520Bz" --header "Content-Type: audio/flac" --data-binary @' + filepath + 'audio.flac "https://gateway-lon.watsonplatform.net/speech-to-text/api/v1/recognize"';
-    console.log(command);
     try {
         exec(command, function (error, stdout, stderr) {
             if (error) {
                 console.log(error);
                 res.send({result: 0, msg: error.toString()});
             }
-            // else if (stderr) {
-            //     console.log(stderr);
-            //     res.send({result: 0, msg: stderr.toString()});
-            // }
             else if (stdout != '') {
-                // console.log("stdout:", stdout);
-
                 if (stdout.code == 400) {
                     res.send({result: 1, msg: "Stream was 0 bytes but needs to be at least 100 bytes."});
                 }
@@ -128,8 +119,6 @@ router.get('/convertAudio', function (req, res, next) {
                     if (JSON.parse(stdout).results != undefined) {
                         if (JSON.parse(stdout).results[0].alternatives != undefined) {
                             if (JSON.parse(stdout).results[0].alternatives[0].transcript != "") {
-                                // res.send({result: 1, msg: stdout.results[0].alternatives[0].transcript});
-                                console.log(JSON.parse(stdout).results[0].alternatives[0].transcript);
                                 saveToDb(JSON.parse(stdout).results[0].alternatives[0].transcript, function (resp) {
                                     var msg;
                                     if (resp === 0) {
@@ -164,8 +153,29 @@ router.get('/convertAudio', function (req, res, next) {
     }
     catch (err) {
         console.log(err);
-        res.send({result: 0});
+        res.send({result: 0, msg: err.toString()});
     }
+});
+
+router.get('/getTranscripts', function (req, res, next) {
+    var array=[];
+    textCollection.find({}).sort({"_id": -1}).toArray(function (err, tcRes) {
+        if (err) {
+            console.log(err);
+            res.send({result: 0, msg: err.toString()});
+        }
+        else {
+            if (tcRes.length > 0) {
+                tcRes.forEach(function (tr) {
+                   array.push(tr._id);
+                });
+                res.send({result: 1, msg: array});
+            }
+            else {
+                res.send({result: 0, msg: "No records"});
+            }
+        }
+    });
 });
 
 module.exports = router;

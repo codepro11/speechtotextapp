@@ -1,16 +1,34 @@
-/**
- * Created by sys2011 on 22/1/19.
- */
-// curl request
-// curl -X POST -u "apikey:TJfuoXFauZTSMOefqWkK40X339GcIdn4YoWlSB4520Bz" --header "Content-Type: audio/flac" --data-binary @audio-file.flac "https://gateway-lon.watsonplatform.net/speech-to-text/api/v1/recognize"
-
 var speechtotext = angular.module('speechtotext', []);
-speechtotext.controller('recordController', ['$scope', '$http', function ($scope, $http) {
+
+speechtotext.controller('recordController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+    $scope.errormessage = "";
     $scope.disabled = true;
     $scope.record = false;
     $scope.click = 0;
+    $scope.Trecords = [];
+
     var mediaRecorder;
     var chunks = [];
+
+    function loadTScripts() {
+        $http({
+            method: "GET",
+            url: "/getTranscripts"
+        }).then(function (response) {
+            if (response.data.result == 0) {
+                $scope.errormessage = response.data.msg;
+                $timeout(function () {
+                    $scope.errormessage = "";
+                }, 3000);
+            }
+            else if (response.data.result == 1) {
+                $scope.Trecords = response.data.msg;
+            }
+        }, function (err) {
+            console.log(err);
+        });
+    }
+
     $scope.changeStatus = function () {
         $scope.disabled = !($scope.disabled);
         if (!$scope.disabled) {
@@ -58,7 +76,6 @@ speechtotext.controller('recordController', ['$scope', '$http', function ($scope
                     mediaRecorder = new MediaRecorder(mediaStreamObj);
 
                     mediaRecorder.start();
-                    console.log(mediaRecorder.state);
                     mediaRecorder.ondataavailable = function (ev) {
                         chunks.push(ev.data);
                     };
@@ -71,57 +88,52 @@ speechtotext.controller('recordController', ['$scope', '$http', function ($scope
             mediaRecorder.onstop = function (ev) {
                 var blob = new Blob(chunks, {'type': 'audio/mp4'});
                 chunks = [];
-                var audioURL = window.URL.createObjectURL(blob);
-
-                // var blob = new Blob(chunks, {type: 'application/octet-stream'});
-                // saveAs(blob, "example.mp4");
-
-                // var fd = new FormData();
-                // fd.append('fname', 'audio.flac');
-                // fd.append('audioBlob', blob);
-                // $.ajax({
-                //     type: 'POST',
-                //     url: '/saveAudio',
-                //     data: fd,
-                //     processData: false,
-                //     contentType: false,
-                //     success: function (data) {
-                //         console.log("first");
-                //         $http({
-                //             method: "GET",
-                //             url: "/convertAudio"
-                //         }).then(function (response) {
-                //             console.log(response);
-                //         }, function (err) {
-                //             console.log(err);
-                //         });
-                //     },
-                //     xhr: function () {
-                //         var xhr = new XMLHttpRequest();
-                //         // listen to the 'progress' event
-                //         xhr.upload.addEventListener('progress', function (evt) {
-                //             console.log("second");
-                //         }, false);
-                //         return xhr;
-                //     }
-                // });
-
-                $http({
-                    method: "GET",
-                    url: "/convertAudio"
-                }).then(function (response) {
-                    if (response.data.result == 0) {
-                        $scope.errormessage = response.data.msg;
+                var fd = new FormData();
+                fd.append('fname', 'audio.flac');
+                fd.append('audioBlob', blob);
+                $.ajax({
+                    type: 'POST',
+                    url: '/saveAudio',
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        $http({
+                            method: "GET",
+                            url: "/convertAudio"
+                        }).then(function (response) {
+                            if (response.data.result == 0) {
+                                $scope.errormessage = response.data.msg;
+                            }
+                            else if (response.data.result == 1) {
+                                $scope.errormessage = response.data.msg;
+                            }
+                            $timeout(function () {
+                                $scope.errormessage = "";
+                                loadTScripts();
+                            }, 3000);
+                        }, function (err) {
+                            console.log(err);
+                        });
+                    },
+                    xhr: function () {
+                        var xhr = new XMLHttpRequest();
+                        // listen to the 'progress' event
+                        xhr.upload.addEventListener('progress', function (evt) {
+                        }, false);
+                        return xhr;
                     }
-                    else {
-                        console.log("Success");
-                    }
-                }, function (err) {
-                    console.log(err);
                 });
             };
             $scope.record = false;
         }
     };
+
+    loadTScripts();
 }]);
 
+speechtotext.filter('capitalize', function () {
+    return function (input) {
+        return (!!input) ? input.charAt(0).toUpperCase() + input.substr(1).toLowerCase() : '';
+    }
+});
